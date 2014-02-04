@@ -1,0 +1,9 @@
+{
+  "nick": "Qwitt",
+  "userName": "Qwitt",
+  "realName": "Qwitt",
+  "server": "irc.freenode.net",
+  "owner": "owner",
+  "port": 6667,
+  "mainChannel": "#qwitter",
+}
