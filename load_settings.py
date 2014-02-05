@@ -1,6 +1,6 @@
 import json
 
-class twitter_secrets:
+class Bot_config:
   __init__(self, config="config.json"):
     config = open(config)
     config = json.loads(configInfoJson)
