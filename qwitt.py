@@ -18,7 +18,8 @@ class Qwitter:
     self.secrets = secrets
 
   def runBot():
+    run
 
-class QwittFactory:
+class QwittFactory(protocol.ClientFactory):
   def __init__( self, channel ):
 
