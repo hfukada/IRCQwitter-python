@@ -1,9 +1,13 @@
 {
+  "consumer_key": "lol",
+  "conumser_secret": "lolsecret",
+  "access_token_key": "lolkey",
+  "access_token_secret": "lolhesaidsecret",
   "nick": "Qwitt",
   "userName": "Qwitt",
   "realName": "Qwitt",
   "server": "irc.freenode.net",
   "owner": "owner",
   "port": 6667,
-  "mainChannel": "#qwitter",
+  "mainChannel": "#qwitter"
 }
