@@ -1,6 +1,6 @@
 import json
 
-class load_settings:
+class bot_configs:
   def __init__(self, config="config.json"):
     configInfoJson = open(config)
     config = json.load(configInfoJson)
