@@ -34,6 +34,8 @@ class Qwitter(irc.client.SimpleIRCClient):
     # API for twitter talking
     self.t = Twitter(auth=OAuth(configs.access_token_key, configs.access_token_secret, configs.consumer_key, configs.consumer_secret) )
 
+    self.connection.add_global_handler("join", getattr(self, "_on_join"), -20)
+    self.connection.add_global_handler("disconnect", getattr(self, "_on_disconnect"), -20)
     #for i in ["disconnect", "join", "kick", "mode","namreply", "nick", "part", "quit"]:
     #  self.connection.add_global_handler(i, getattr(self, "_on_" + i), -20)
     configs.print_configs(1)
@@ -41,13 +43,21 @@ class Qwitter(irc.client.SimpleIRCClient):
   def _connect_checker(self):
     if not self.connection.is_connected():
       self.connection.execute_delayed(self.reconnectInterval, self._connect_checker)
-      self.jump_server()
 
   def _connect(self):
     try:
       self.connect(self.server, self.port, self.nickname, ircname=self.realname)
+      print("connected: ", self.server, self.port, self.nickname)
+      if self.connection.is_connected():
+        print("still good")
+      self.connection.join(self.channel)
+      print("joined ", self.channel)
     except irc.client.ServerConnectionError as e:
       print(e.value)
+
+  def _on_join(self, c, e):
+    print ("i should be here")
+    self.connection.privmsg(self.channel, "sup fuckers, I'm back")
 
   def _on_disconnect(self, c, e):
     self.connection.execute_delayed(self.reconnectionInterval, self._connected_checker)
@@ -106,6 +116,7 @@ class bot_configs:
     print("Real " + self.realName)
     print("Server " + self.server)
     print("Port " + str(self.port))
+    print("Channel " + self.channel)
 
 if __name__ == '__main__':
   q = Qwitter("config.json")
