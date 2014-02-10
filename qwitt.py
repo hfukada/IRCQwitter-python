@@ -15,35 +15,41 @@ class Qwitter(irc.IRCClient):
     self.nickname = self.factory.nickname
     self.realname = self.factory.realname
     self.username = self.factory.username
+    self.channel = self.factory.channel
     self.owner = self.factory.owner
 
     self.api = self.factory.api
+    self.factory._configs.print_configs(debug=1)
     irc.IRCClient.connectionMade(self)
-    print "connection has been made"
+    log.msg("connection has been made")
 
   def connectionLost(self, reason):
-    print "Connection has been lost: " + reason
+    irc.IRCClient.connectionLost(self, reason)
+    log.msg("Connection has been lost: {!r}".format(reason))
 
   def signedOn(self):
-    print "Signed on"
+    log.msg("Signed on")
     self.join(self.factory.channel)
 
   def joined(self, channel):
-    print "Joined channel: " + channel
+    log.msg("Joined channel: " + channel)
 
   def privmsg(self, user, channel, msg):
-    print "Got private message: " + msg + " from: " + channel + ":user"+user
+    log.msg("Got private message: " + msg + " from: " + channel + ":user"+user)
 
 
 class QwittFactory(protocol.ClientFactory):
+  protocol = Qwitter
 
   def __init__(self, configFile="config.json"):
     # load configs from external file
     configs = bot_configs(config=configFile)
+    self._configs = configs
 
     self.nickname = configs.nick
     self.username = configs.userName
     self.realname = configs.realName
+    self.channel = configs.channel
     self.owner = configs.owner
 
     self.server = configs.server
@@ -59,19 +65,21 @@ class QwittFactory(protocol.ClientFactory):
     # API for twitter talking
     self.api = twitter.Api(consumer_key=configs.consumer_key, consumer_secret=configs.consumer_secret, access_token_key=configs.access_token_key, access_token_secret=configs.access_token_secret)
 
-  def buildProtocol(self, addr):
-    p = Qwitter()
-    p.factory = self
-    return p
+    configs.print_configs()
+
+  #def buildProtocol(self, addr):
+  #  p = Qwitter()
+  #  p.factory = self
+  #  return p
 
   def clientConnectionLost(self, connector, reason):
     # if we DC then we connect back
-    print "Reconnecting..."
-    connector.connect()
+    log.msg("Reconnecting... {!r}".format(reason))
+    #connector.connect()
 
   def clientConnectionFailed(self, connector, reason):
     # Failed
-    print "connection failed: " + reason
+    log.msg("connection failed: {!r} ".format(reason))
 
 class bot_configs:
   def __init__(self, config="config.json"):
@@ -93,22 +101,22 @@ class bot_configs:
     self.port = config['port']
     self.channel = config['mainChannel']
 
-  def print_configs(self, debug = 0):
+  def print_configs(self, debug = 1):
     if debug == 0:
       return
-    print "Consumer key " + self.consumer_key
-    print "Consumer Secret " + self.consumer_secret
-    print "Access Taken Key " + self.access_token_key
-    print "Access Token Secret " + self.access_token_secret
+    print("Consumer key " + self.consumer_key)
+    print("Consumer Secret " + self.consumer_secret)
+    print("Access Taken Key " + self.access_token_key)
+    print("Access Token Secret " + self.access_token_secret)
 
-    print "Owner " + self.owner
-    print "Nick " + self.nick
-    print "User " + self.userName
-    print "Real " + self.realName
-    print "Server " + self.server
-    print "Port " + str(self.port)
+    log.msg("Owner " + self.owner)
+    log.msg("Nick " + self.nick)
+    log.msg("User " + self.userName)
+    log.msg("Real " + self.realName)
+    log.msg("Server " + self.server)
+    log.msg("Port " + str(self.port))
 
 if __name__ == '__main__':
   q = QwittFactory("config.json")
   reactor.connectTCP(q.server, q.port, q)
-  q.run()
+  reactor.run()
