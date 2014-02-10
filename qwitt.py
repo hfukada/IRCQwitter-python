@@ -57,7 +57,7 @@ class QwittFactory(protocol.ClientFactory):
     # self.access_token_secret = configs.access_token_secret
 
     # API for twitter talking
-    self.api = twitter.Api(consumer_key=configs.consumer_key, consumer_secret=configs.consumer_secret, access_token_key=configs.access_token_key, access_token_secret=configs.access_token_configs)
+    self.api = twitter.Api(consumer_key=configs.consumer_key, consumer_secret=configs.consumer_secret, access_token_key=configs.access_token_key, access_token_secret=configs.access_token_secret)
 
   def buildProtocol(self, addr):
     p = Qwitter()
