@@ -138,11 +138,18 @@ class Qwitter(irc.bot.SingleServerIRCBot):
 
   def sendTweet(self, text):
     # print("Posting: %s"%(text))
-    self.t.statuses.update(status=text)
+    try:
+      self.t.statuses.update(status=text)
+    except Exception:
+      pass
+
 
   def updateDescription(self, text):
     # print(text)
-    self.t.account.update_profile(description=text)
+    try:
+      self.t.account.update_profile(description=text)
+    except Exception:
+      pass
 
 
 class bot_configs:
