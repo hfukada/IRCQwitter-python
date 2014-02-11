@@ -2,16 +2,14 @@
 from twitter import *
 import json
 
-import irc.client
+import irc.bot
 
 # system imports
 import time, sys
 
-class Qwitter(irc.client.SimpleIRCClient):
+class Qwitter(irc.bot.SingleServerIRCBot):
 
   def __init__(self, configFile="config.json"):
-    super(Qwitter, self).__init__()
-
     configs = bot_configs(config=configFile)
 
     self.nickname = configs.nick
@@ -32,57 +30,113 @@ class Qwitter(irc.client.SimpleIRCClient):
     # self.access_token_secret = configs.access_token_secret
 
     # API for twitter talking
-    # self.t = Twitter(auth=OAuth(configs.access_token_key, configs.access_token_secret, configs.consumer_key, configs.consumer_secret) )
-
-
-    self.connection.add_global_handler("join", getattr(self, "_on_join"), -20)
-    self.connection.add_global_handler("disconnect", getattr(self, "_on_disconnect"), -20)
-    #for i in ["disconnect", "join", "kick", "mode","namreply", "nick", "part", "quit"]:
-    #  self.connection.add_global_handler(i, getattr(self, "_on_" + i), -20)
+    self.t = Twitter(auth=OAuth(configs.access_token_key, configs.access_token_secret, configs.consumer_key, configs.consumer_secret) )
+    irc.bot.SingleServerIRCBot.__init__(self, [(self.server, self.port)], self.nickname, self.realname, reconnection_interval=self.reconnectInterval)
     configs.print_configs(1)
+    self.blacklist = configs.blacklist
+    self.userquotes = {}
+    self.commands = ["join", "say", "quoth"]
+    self.allhist = []
+    self.reset = True
 
-  def _connected_checker(self):
-    if not self.connection.is_connected():
-      self.connection.execute_delayed(self.reconnectInterval, self._connected_checker)
-      self._connect()
+  def on_welcome(self, connection, event):
+    connection.join(self.channel)
 
-  def _connect(self):
-    try:
-      self.connect(self.server, self.port, self.nickname, ircname=self.realname)
-      print("connected: ", self.server, self.port, self.nickname)
-      if self.connection.is_connected():
-        print("still good")
-      # self.connection.join(self.channel)
-      # print("joined ", self.channel)
-    except irc.client.ServerConnectionError as e:
-      print(e.value)
+  def on_privmsg(self, connection, event):
+    if event.source.nick == self.owner:
+      self.do_command(connection, event)
 
-  def _on_join(self, c, e):
-    print ("i should be here")
-    self.connection.privmsg(self.channel, "sup fuckers, I'm back")
+  def on_pubmsg(self, connection, event):
+    if not self.inBlacklist(event.arguments[0]):
+      self.allhist.append("<" + event.source.nick + "> " + event.arguments[0])
+      if len(self.allhist) > 2 and self.carrotCheck():
+        self.sendTweet(self.allhist[-3])
+        connection.privmsg(event.target, "Posting: " + self.allhist[-3] + " to @QuothTheDong")
+        self.allhist = []
 
-  def _on_disconnect(self, c, e):
-    print ("Oops I disconnected")
-    self.connection.execute_delayed(self.reconnectInterval, self._connected_checker)
+    if self.recordLine(event.arguments[0]):
+      """ Add the line to the user queue if it exists """
+      self.reset = True
+      if event.source.nick in self.userquotes:
+        self.userquotes[event.source.nick].append(event.arguments[0])
+      else:
+        self.userquotes[event.source.nick] = [event.arguments[0]]
+    else:
+      self.do_command(connection, event)
 
-  def on_ctcp(self, c, e):
-    """Default handler for ctcp events.
+  def do_command(self, connection, event):
 
-      Replies to VERSION and PING requests and relays DCC requests
-      to the on_dccchat method.
-    """
-    nick = e.source.nick
-    if e.arguments[0] == "VERSION":
-      c.ctcp_reply(nick, "VERSION " + self.get_version())
-    elif e.arguments[0] == "PING":
-      if len(e.arguments) > 1:
-        c.ctcp_reply(nick, "PING " + e.arguments[1])
-    elif e.arguments[0] == "DCC" and e.arguments[1].split(" ", 1)[0] == "CHAT":
-      self.on_dccchat(c, e)
+    cmd = event.arguments[0].split()[0]
+    args = list(filter(None, event.arguments[0].split(' ')[1:]))
 
-  def start(self):
-    self._connect()
-    super(Qwitter,self).start()
+    if cmd[0] != '!':
+      return
+
+    if cmd == "!join" and event.source.nick == self.owner:
+      connection.join(args[0])
+    elif cmd == "!say" and event.source.nick == self.owner:
+      connection.privmsg(args[0], ' '.join(args[1:]))
+    elif cmd == "!print" and event.source.nick == self.owner:
+      print(self.allhist)
+      print(self.userquotes)
+    elif cmd == "!clean" and event.source.nick == self.owner:
+      for user in self.userquotes:
+        if len(self.userquotes[user]) > 500:
+          self.userquotes[user] = self.userquotes[user][-500:]
+      connection.privmsg(self.owner, "Clean up the crap")
+    elif cmd == "!quo" or cmd == "!quoth":
+      if len(args) > 1:
+        self.handleQuoth(args[0], connection, event, scrollback=args[1])
+      else:
+        self.handleQuoth(args[0], connection, event)
+
+  def inBlacklist(self, line):
+    for word in self.blacklist:
+      if word in line:
+        return True
+    return False
+
+  def recordLine(self, line):
+    if line.count('^') > len(line)/2:
+      return False
+    else:
+      return not self.inBlacklist(line)
+
+  def carrotCheck(self):
+    prevline = self.getTrimmedLine(self.allhist[-1])
+    prev2line = self.getTrimmedLine(self.allhist[-2])
+    if prevline.count('^') > len(prevline)/2 and prev2line[-1].count('^') > len(prev2line)/2 and self.reset:
+      self.reset = False
+      return True
+    return False
+
+  def getTrimmedLine(self, line):
+    return line.split('> ')[1:]
+
+  def handleQuoth(self, nick, connection, event, scrollback="1"):
+    if scrollback.isdigit():
+      scrollback = int(scrollback)
+      if scrollback <= 0:
+        connection.privmsg(event.source.nick, "I don't know the future for that person")
+        return
+    else:
+      connection.privmsg(event.source.nick, "Enter a number you fool. Usage !quoth <nick> [scrollback]")
+      return
+
+    if nick in self.userquotes:
+      if len(self.userquotes[nick]) >= scrollback:
+        offset = len(self.userquotes[nick])
+        self.sendTweet("<" + nick + "> " + self.userquotes[nick][offset-scrollback])
+        connection.privmsg(event.source.nick, "Posting to @QuothTheDong: " + "<" + nick + "> " + self.userquotes[nick][offset-scrollback])
+      else:
+        connection.privmsg(event.source.nick, "History for %s does not exist that far"%(nick))
+    else:
+      connection.privmsg(event.source.nick, "Nick: %s does not exist"%(nick))
+
+  def sendTweet(self, text):
+    # print("Posting: %s"%(text))
+    self.t.statuses.update(status=text)
+
 
 class bot_configs:
   def __init__(self, config="config.json"):
@@ -104,6 +158,7 @@ class bot_configs:
     self.port = config['port']
     self.channel = config['mainChannel']
     self.reconnectInterval = config['reconnectInterval']
+    self.blacklist = config['blacklist']
 
   def print_configs(self, debug = 1):
     if debug == 0:

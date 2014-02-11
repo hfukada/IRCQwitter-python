@@ -1,0 +1,15 @@
+{
+  "consumer_key": "INEEDAKEY",
+  "consumer_secret": "INEEDASECRET",
+  "access_token_key": "INEEDATOKEN",
+  "access_token_secret": "INEEDASECRETAGAIN",
+  "nick": "Qwitt",
+  "userName": "Qwitt",
+  "realName": "Qwitt",
+  "server": "irc.freednode.com",
+  "owner": "boobbutt",
+  "port": 6667,
+  "mainChannel": "#qwitter",
+  "reconnectInterval": 0,
+  "blacklist": ["!quo", "!quoth", "!join", "!say", "!print"]
+}
