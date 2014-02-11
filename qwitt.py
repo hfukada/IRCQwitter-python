@@ -89,6 +89,9 @@ class Qwitter(irc.bot.SingleServerIRCBot):
         self.handleQuoth(args[0], connection, event, scrollback=args[1])
       else:
         self.handleQuoth(args[0], connection, event)
+    elif cmd =="!qwittdesc":
+      self.updateDescription(' '.join(args))
+      connection.privmsg(event.target, "Updated description: https://twitter.com/QuothTheDong")
 
   def inBlacklist(self, line):
     for word in self.blacklist:
@@ -136,6 +139,10 @@ class Qwitter(irc.bot.SingleServerIRCBot):
   def sendTweet(self, text):
     # print("Posting: %s"%(text))
     self.t.statuses.update(status=text)
+
+  def updateDescription(self, text):
+    # print(text)
+    self.t.account.update_profile(description=text)
 
 
 class bot_configs:

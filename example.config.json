@@ -11,5 +11,5 @@
   "port": 6667,
   "mainChannel": "#qwitter",
   "reconnectInterval": 0,
-  "blacklist": ["!quo", "!quoth", "!join", "!say", "!print"]
+  "blacklist": ["!quo", "!quoth", "!qwittdesc", "!join", "!say", "!print"]
 }
