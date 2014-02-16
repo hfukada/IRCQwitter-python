@@ -50,7 +50,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     if not self.inBlacklist(event.arguments[0]):
       self.allhist.append("<" + event.source.nick + "> " + event.arguments[0])
       if len(self.allhist) > 2 and self.carrotCheck():
-        self.sendTweet(self.allhist[-3])
+        #self.sendTweet(self.allhist[-3])
         connection.privmsg(event.target, "Posting: " + self.allhist[-3] + " to @QuothTheDong")
         self.allhist = []
 
@@ -77,8 +77,9 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     elif cmd == "!say" and event.source.nick == self.owner:
       connection.privmsg(args[0], ' '.join(args[1:]))
     elif cmd == "!print" and event.source.nick == self.owner:
-      print(self.allhist)
-      print(self.userquotes)
+      connection.privmsg(self.owner, 'All history size: ' + str(len(self.allhist)) + ' lines.')
+      for user in self.userquotes:
+        connection.privmsg(self.owner, 'Size of history for user <' + user + '>: ' + str(len(self.userquotes[user])) + ' lines.')
     elif cmd == "!clean" and event.source.nick == self.owner:
       for user in self.userquotes:
         if len(self.userquotes[user]) > 500:
@@ -106,9 +107,11 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       return not self.inBlacklist(line)
 
   def carrotCheck(self):
-    prevline = self.getTrimmedLine(self.allhist[-1])
-    prev2line = self.getTrimmedLine(self.allhist[-2])
-    if prevline.count('^') > len(prevline)/2 and prev2line[-1].count('^') > len(prev2line)/2 and self.reset:
+    # Oh man, this is so dirty
+    prevline = '> '.join(self.getTrimmedLine(self.allhist[-1]))
+    prev2line = '> '.join(self.getTrimmedLine(self.allhist[-2]))
+    if prevline.count('^') > len(prevline)/2 and prev2line.count('^') > len(prev2line)/2 and self.reset:
+      print("should post")
       self.reset = False
       return True
     return False
