@@ -3,6 +3,7 @@
   "consumer_secret": "INEEDASECRET",
   "access_token_key": "INEEDATOKEN",
   "access_token_secret": "INEEDASECRETAGAIN",
+  "twitter_handle": "Quoth",
   "nick": "Qwitt",
   "userName": "Qwitt",
   "realName": "Qwitt",
