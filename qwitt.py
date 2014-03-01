@@ -22,7 +22,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     self.port = configs.port
     self.channel = configs.channel
     self.reconnectInterval = configs.reconnectInterval
-    
+
     self.twitter_handle = configs.twitter_handle
 
     # Twitter configs for posting
@@ -178,6 +178,7 @@ class bot_configs:
     self.channel = config['mainChannel']
     self.reconnectInterval = config['reconnectInterval']
     self.blacklist = config['blacklist']
+    self.twitter_handle = config['twitter_handle']
 
   def print_configs(self, debug = 1):
     if debug == 0:
