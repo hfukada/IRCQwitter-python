@@ -22,6 +22,8 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     self.port = configs.port
     self.channel = configs.channel
     self.reconnectInterval = configs.reconnectInterval
+    
+    self.twitter_handle = configs.twitter_handle
 
     # Twitter configs for posting
     # self.consumer_key = configs.consumer_key
@@ -51,7 +53,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       self.allhist.append("<" + event.source.nick + "> " + event.arguments[0])
       if len(self.allhist) > 2 and self.carrotCheck():
         #self.sendTweet(self.allhist[-3])
-        connection.privmsg(event.target, "Posting: " + self.allhist[-3] + " to @QuothTheDong")
+        connection.privmsg(event.target, "Posting: " + self.allhist[-3] + " to @" + self.twitter_handle)
         self.allhist = []
 
     if self.recordLine(event.arguments[0]):
@@ -92,7 +94,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
         self.handleQuoth(args[0], connection, event)
     elif cmd =="!qwittdesc":
       self.updateDescription(' '.join(args))
-      connection.privmsg(event.target, "Updated description: https://twitter.com/QuothTheDong")
+      connection.privmsg(event.target, "Updated description: https://twitter.com/" + self.twitter_handle)
 
   def inBlacklist(self, line):
     for word in self.blacklist:
@@ -133,7 +135,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       if len(self.userquotes[nick]) >= scrollback:
         offset = len(self.userquotes[nick])
         self.sendTweet("<" + nick + "> " + self.userquotes[nick][offset-scrollback])
-        connection.privmsg(event.source.nick, "Posting to @QuothTheDong: " + "<" + nick + "> " + self.userquotes[nick][offset-scrollback])
+        connection.privmsg(event.source.nick, "Posting to @" + self.twitter_handle + ": " + "<" + nick + "> " + self.userquotes[nick][offset-scrollback])
       else:
         connection.privmsg(event.source.nick, "History for %s does not exist that far"%(nick))
     else:
