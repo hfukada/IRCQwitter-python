@@ -60,9 +60,9 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       """ Add the line to the user queue if it exists """
       self.reset = True
       if event.source.nick in self.userquotes:
-        self.userquotes[event.source.nick].append(event.arguments[0])
+        self.userquotes[event.source.nick.lower()].append(event.arguments[0])
       else:
-        self.userquotes[event.source.nick] = [event.arguments[0]]
+        self.userquotes[event.source.nick.lower()] = [event.arguments[0]]
     else:
       self.do_command(connection, event)
 
@@ -81,11 +81,11 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     elif cmd == "!print" and event.source.nick == self.owner:
       connection.privmsg(self.owner, 'All history size: ' + str(len(self.allhist)) + ' lines.')
       for user in self.userquotes:
-        connection.privmsg(self.owner, 'Size of history for user <' + user + '>: ' + str(len(self.userquotes[user])) + ' lines.')
+        connection.privmsg(self.owner, 'Size of history for user <' + user + '>: ' + str(len(self.userquotes[user.lower()])) + ' lines.')
     elif cmd == "!clean" and event.source.nick == self.owner:
       for user in self.userquotes:
-        if len(self.userquotes[user]) > 500:
-          self.userquotes[user] = self.userquotes[user][-500:]
+        if len(self.userquotes[user.lower()]) > 500:
+          self.userquotes[user.lower()] = self.userquotes[user.lower()][-500:]
       connection.privmsg(self.owner, "Clean up the crap")
     elif cmd == "!quo" or cmd == "!quoth":
       if len(args) > 1:
@@ -113,7 +113,6 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     prevline = '> '.join(self.getTrimmedLine(self.allhist[-1]))
     prev2line = '> '.join(self.getTrimmedLine(self.allhist[-2]))
     if prevline.count('^') > len(prevline)/2 and prev2line.count('^') > len(prev2line)/2 and self.reset:
-      print("should post")
       self.reset = False
       return True
     return False
@@ -131,11 +130,11 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       connection.privmsg(event.source.nick, "Enter a number you fool. Usage !quoth <nick> [scrollback]")
       return
 
-    if nick in self.userquotes:
-      if len(self.userquotes[nick]) >= scrollback:
-        offset = len(self.userquotes[nick])
-        self.sendTweet("<" + nick + "> " + self.userquotes[nick][offset-scrollback])
-        connection.privmsg(event.source.nick, "Posting to @" + self.twitter_handle + ": " + "<" + nick + "> " + self.userquotes[nick][offset-scrollback])
+    if nick.lower() in self.userquotes:
+      if len(self.userquotes[nick.lower()]) >= scrollback:
+        offset = len(self.userquotes[nick.lower()])
+        self.sendTweet("<" + nick + "> " + self.userquotes[nick.lower()][offset-scrollback])
+        connection.privmsg(event.source.nick, "Posting to @" + self.twitter_handle + ": " + "<" + nick + "> " + self.userquotes[nick.lower()][offset-scrollback])
       else:
         connection.privmsg(event.source.nick, "History for %s does not exist that far"%(nick))
     else:
