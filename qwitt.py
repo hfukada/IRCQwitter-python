@@ -93,7 +93,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       elif len(args) == 1:
         self.handleQuoth(args[0], connection, event)
       elif len(args) == 0:
-        connection.privmsg(event.target, event.source.nick " doesn't even know the syntax. shame on his family.")
+        connection.privmsg(event.target, event.source.nick + " doesn't even know the syntax! shame on his family.")
     elif cmd =="!qwittdesc":
       self.updateDescription(' '.join(args))
       connection.privmsg(event.target, "Updated description: https://twitter.com/" + self.twitter_handle)
