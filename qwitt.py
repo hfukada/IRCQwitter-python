@@ -88,10 +88,12 @@ class Qwitter(irc.bot.SingleServerIRCBot):
           self.userquotes[user.lower()] = self.userquotes[user.lower()][-500:]
       connection.privmsg(self.owner, "Clean up the crap")
     elif cmd == "!quo" or cmd == "!quoth":
-      if len(args) > 1:
+      if len(args) >= 2:
         self.handleQuoth(args[0], connection, event, scrollback=args[1])
-      else:
+      elif len(args) == 1:
         self.handleQuoth(args[0], connection, event)
+      elif len(args) == 0:
+        connection.privmsg(event.target, event.source.nick " doesn't even know the syntax. shame on his family.")
     elif cmd =="!qwittdesc":
       self.updateDescription(' '.join(args))
       connection.privmsg(event.target, "Updated description: https://twitter.com/" + self.twitter_handle)
