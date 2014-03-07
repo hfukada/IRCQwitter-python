@@ -52,8 +52,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     if not self.inBlacklist(event.arguments[0]):
       self.allhist.append("<" + event.source.nick + "> " + event.arguments[0])
       if len(self.allhist) > 2 and self.carrotCheck():
-        #self.sendTweet(self.allhist[-3])
-        connection.privmsg(event.target, "Posting: " + self.allhist[-3] + " to @" + self.twitter_handle)
+        self.sendTweet(connection, event, event.target, self.allhist[-3])
         self.allhist = []
 
     if self.recordLine(event.arguments[0]):
@@ -135,17 +134,19 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     if nick.lower() in self.userquotes:
       if len(self.userquotes[nick.lower()]) >= scrollback:
         offset = len(self.userquotes[nick.lower()])
-        self.sendTweet("<" + nick + "> " + self.userquotes[nick.lower()][offset-scrollback])
-        connection.privmsg(event.source.nick, "Posting to @" + self.twitter_handle + ": " + "<" + nick + "> " + self.userquotes[nick.lower()][offset-scrollback])
+        self.sendTweet(connection, event, event.source.nick, "<" + nick + "> " + self.userquotes[nick.lower()][offset-scrollback])
       else:
         connection.privmsg(event.source.nick, "History for %s does not exist that far"%(nick))
     else:
       connection.privmsg(event.source.nick, "Nick: %s does not exist"%(nick))
 
-  def sendTweet(self, text):
-    # print("Posting: %s"%(text))
+  def sendTweet(self, connection, event, target, text):
+    if len(text) > 140:
+      connection.privmsg(target, "The quote is too long. Sorry mang.")
+      return
     try:
       self.t.statuses.update(status=text)
+      connection.privmsg(target, "Posting " + text + " @" + self.twitter_handle)
     except Exception:
       pass
 
