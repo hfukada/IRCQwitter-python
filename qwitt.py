@@ -58,7 +58,7 @@ class Qwitter(irc.bot.SingleServerIRCBot):
     if self.recordLine(event.arguments[0]):
       """ Add the line to the user queue if it exists """
       self.reset = True
-      if event.source.nick in self.userquotes:
+      if event.source.nick.lower() in self.userquotes:
         self.userquotes[event.source.nick.lower()].append(event.arguments[0])
       else:
         self.userquotes[event.source.nick.lower()] = [event.arguments[0]]
