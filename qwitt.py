@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # twitter things
 from twitter import *
 import json
