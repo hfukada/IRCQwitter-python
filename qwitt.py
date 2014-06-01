@@ -142,13 +142,11 @@ class Qwitter(irc.bot.SingleServerIRCBot):
       connection.privmsg(event.source.nick, "Nick: %s does not exist"%(nick))
 
   def sendTweet(self, connection, event, target, text):
-    if len(text) > 140:
-      connection.privmsg(target, "The quote is too long. Sorry mang.")
-      return
     try:
       self.t.statuses.update(status=text)
       connection.privmsg(target, "Posting " + text + " @" + self.twitter_handle)
     except Exception:
+      connection.privmsg(target, "The quote is too long. Sorry mang.")
       pass
 
 
